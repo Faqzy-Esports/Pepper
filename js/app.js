@@ -306,8 +306,8 @@ class PepperApp {
                 }
 
                 try {
-                    const { path: avatarPath } = await SupabaseService.uploadProfileAvatar(avatarFile);
-                    avatarUrl = avatarPath;
+                    const { publicUrl } = await SupabaseService.uploadProfileAvatar(avatarFile);
+                    avatarUrl = publicUrl;
                 } catch (error) {
                     console.error('Avatar upload failed:', error);
                     if (error?.message) {

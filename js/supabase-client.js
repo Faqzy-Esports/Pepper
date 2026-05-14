@@ -66,19 +66,34 @@ const SupabaseService = {
             return '';
         }
 
+        // If it's already a full HTTP URL, return it as-is
         if (path.startsWith('http')) {
             return path;
         }
 
-        const { data, error } = await this.client.storage.from(this.getBucketName()).getPublicUrl(path);
-        if (!error && data?.publicUrl) {
-            const publicUrl = data.publicUrl;
-            if (typeof publicUrl === 'string' && publicUrl.startsWith('http') && publicUrl.includes('/public/')) {
-                return publicUrl;
+        try {
+            const { data, error } = await this.client.storage.from(this.getBucketName()).getPublicUrl(path);
+            
+            if (!error && data?.publicUrl) {
+                const publicUrl = data.publicUrl;
+                // Ensure it's a valid HTTP URL
+                if (typeof publicUrl === 'string' && publicUrl.startsWith('http')) {
+                    return publicUrl;
+                }
+            }
+
+            // If getPublicUrl failed, try creating a signed URL instead
+            return await this.createSignedUrl(path);
+        } catch (error) {
+            console.error('Error getting public URL for path:', path, error);
+            // Fall back to signed URL
+            try {
+                return await this.createSignedUrl(path);
+            } catch (signedError) {
+                console.error('Error creating signed URL:', signedError);
+                return '';
             }
         }
-
-        return this.createSignedUrl(path);
     },
 
     async uploadPackZip(file) {

@@ -33,6 +33,11 @@ class AuthManager {
 
     async resolveAvatarUrl(avatarUrl) {
         try {
+            // If it's already a full URL, don't try to resolve it again
+            if (avatarUrl.startsWith('http')) {
+                return;
+            }
+            
             const publicUrl = await SupabaseService.getPublicUrl(avatarUrl);
             if (publicUrl && this.currentUser) {
                 this.currentUser.avatarUrl = publicUrl;
@@ -68,12 +73,23 @@ class AuthManager {
 
     async normalizeUserRecord(user) {
         let avatarUrl = user.avatar_url || '';
-        if (avatarUrl && !avatarUrl.startsWith('http') && SupabaseService?.isReady?.()) {
+        
+        // If avatar_url is already a full HTTP URL, use it as-is
+        if (avatarUrl && avatarUrl.startsWith('http')) {
+            // Already a full URL, keep it
+        } 
+        // If it's a storage path and we have Supabase ready, resolve it
+        else if (avatarUrl && SupabaseService?.isReady?.()) {
             try {
                 avatarUrl = await SupabaseService.getPublicUrl(avatarUrl);
             } catch (error) {
                 console.warn('Could not resolve stored avatar URL:', error);
+                avatarUrl = '';
             }
+        } 
+        // Otherwise clear it
+        else {
+            avatarUrl = '';
         }
 
         return {
