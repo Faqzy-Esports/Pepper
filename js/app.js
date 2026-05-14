@@ -48,6 +48,20 @@ class PepperApp {
         updateStats();
     }
 
+    async loadPacks() {
+        if (SupabaseService?.isReady?.()) {
+            try {
+                const remotePacks = await SupabaseService.fetchPacks();
+                if (Array.isArray(remotePacks)) {
+                    this.packList = remotePacks;
+                }
+            } catch (error) {
+                console.error('Failed to fetch packs from Supabase:', error);
+            }
+        }
+        return this.packList;
+    }
+
     setupNavigation() {
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', (e) => {
@@ -174,7 +188,9 @@ class PepperApp {
             const category = document.getElementById('uploadCategory').value;
             const description = document.getElementById('uploadDescription').value.trim();
             const fileInput = document.getElementById('uploadFile');
+            const coverFileInput = document.getElementById('uploadCoverFile');
             const file = fileInput?.files?.[0];
+            const coverFile = coverFileInput?.files?.[0];
 
             if (!name || !category || !description) {
                 uiManager.showNotification('Please fill in all required fields', 'error');
@@ -219,6 +235,12 @@ class PepperApp {
 
             if (SupabaseService?.isReady?.()) {
                 try {
+                    if (coverFile) {
+                        uiManager.showNotification('Uploading cover image...', 'info');
+                        const { publicUrl } = await SupabaseService.uploadPackCover(coverFile);
+                        packData.cover = publicUrl || packData.cover;
+                    }
+
                     uiManager.showNotification('Uploading ZIP file to Supabase...', 'info');
                     const { publicUrl, path } = await SupabaseService.uploadPackZip(file);
                     packData.downloadUrl = publicUrl;
@@ -321,6 +343,85 @@ class PepperApp {
             uiManager.showNotification('New version published successfully!', 'success');
             uiManager.closeModal(document.getElementById('updateModal'));
             document.getElementById('updatePackForm').reset();
+        });
+
+        document.getElementById('editPackForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!authManager.isLoggedIn()) {
+                uiManager.showNotification('Please login first', 'error');
+                return;
+            }
+
+            const packId = parseInt(document.getElementById('editPackId').value, 10);
+            const pack = this.getPackById(packId);
+            if (!pack) {
+                uiManager.showNotification('Pack not found', 'error');
+                return;
+            }
+
+            const currentUser = authManager.getCurrentUser();
+            if (!currentUser || currentUser.username !== pack.uploadedBy) {
+                uiManager.showNotification('Only the original author can edit this pack', 'error');
+                return;
+            }
+
+            const name = document.getElementById('editPackName').value.trim();
+            const category = document.getElementById('editPackCategory').value;
+            const description = document.getElementById('editPackDescription').value.trim();
+            const fullDescription = document.getElementById('editPackFullDescription').value.trim();
+            const tags = (document.getElementById('editPackTags').value || '').split(',').map(t => t.trim()).filter(Boolean);
+            const coverFile = document.getElementById('editPackCoverFile')?.files?.[0];
+
+            if (!name || !category || !description) {
+                uiManager.showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+
+            if (coverFile && SupabaseService?.isReady?.()) {
+                try {
+                    uiManager.showNotification('Uploading new cover image...', 'info');
+                    const { publicUrl } = await SupabaseService.uploadPackCover(coverFile);
+                    pack.cover = publicUrl || pack.cover;
+                } catch (error) {
+                    console.error('Cover upload failed:', error);
+                    uiManager.showNotification('Cover upload failed. Please try again.', 'error');
+                    return;
+                }
+            }
+
+            pack.name = name;
+            pack.category = category;
+            pack.description = description;
+            pack.fullDescription = fullDescription;
+            pack.tags = tags;
+
+            const updateData = {
+                name: pack.name,
+                category: pack.category,
+                description: pack.description,
+                fullDescription: pack.fullDescription,
+                tags: pack.tags,
+                cover: pack.cover
+            };
+
+            if (SupabaseService?.isReady?.()) {
+                try {
+                    await SupabaseService.updatePackVersion(packId, updateData);
+                } catch (error) {
+                    console.error('Failed to update pack in Supabase:', error);
+                    uiManager.showNotification('Could not save pack edits. Please try again.', 'error');
+                    return;
+                }
+            }
+
+            uiManager.showNotification('Pack updated successfully!', 'success');
+            uiManager.closeModal(document.getElementById('editPackModal'));
+            document.getElementById('editPackForm').reset();
+            if (document.getElementById('detailPackId')?.value == packId.toString()) {
+                this.viewPackDetail(packId);
+            }
+            this.renderMyUploads();
+            this.renderMyLikes();
         });
 
         // Auth Toggle
@@ -442,6 +543,17 @@ class PepperApp {
                         });
                     }
                 }
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            const actionButton = e.target.closest('button[data-action]');
+            if (!actionButton) return;
+
+            const packId = parseInt(actionButton.dataset.packId, 10);
+            if (actionButton.dataset.action === 'edit-pack') {
+                e.preventDefault();
+                this.showEditModal(packId);
             }
         });
 
@@ -755,16 +867,7 @@ class PepperApp {
         browsePackGrid.style.opacity = '0.5';
 
         const loadPackData = async () => {
-            if (SupabaseService?.isReady?.()) {
-                try {
-                    const remotePacks = await SupabaseService.fetchPacks();
-                    if (Array.isArray(remotePacks)) {
-                        this.packList = remotePacks;
-                    }
-                } catch (error) {
-                    console.warn('Supabase pack fetch failed:', error);
-                }
-            }
+            await this.loadPacks();
         };
 
         const updateResults = () => {
@@ -895,24 +998,113 @@ class PepperApp {
         this.navigateTo('home');
     }
 
-    showMyUploads() {
+    async showMyUploads() {
         if (!authManager.isLoggedIn()) {
             uiManager.showNotification('Please login to view your uploads.', 'error');
             uiManager.openModal('authModal');
             return;
         }
-        uiManager.showNotification('Showing your uploads is coming soon.', 'info');
-        this.navigateTo('browse');
+
+        await this.loadPacks();
+        this.renderMyUploads();
+        this.navigateTo('myUploads');
     }
 
-    showMyLikes() {
+    async showMyLikes() {
         if (!authManager.isLoggedIn()) {
             uiManager.showNotification('Please login to view your likes.', 'error');
             uiManager.openModal('authModal');
             return;
         }
-        uiManager.showNotification('Showing your liked packs is coming soon.', 'info');
-        this.navigateTo('browse');
+
+        await this.loadPacks();
+        this.renderMyLikes();
+        this.navigateTo('myLikes');
+    }
+
+    renderMyUploads() {
+        const grid = document.getElementById('myUploadsGrid');
+        if (!grid) return;
+
+        const currentUser = authManager.getCurrentUser();
+        const uploads = this.packList.filter(pack => pack.uploadedBy === currentUser.username);
+
+        if (uploads.length === 0) {
+            grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 2rem;">You have not uploaded any packs yet.</p>';
+            return;
+        }
+
+        grid.innerHTML = uploads.map((pack, index) => this.createPackCardWithActions(pack, index, [
+            { name: 'edit-pack', label: 'Edit Pack' }
+        ])).join('');
+    }
+
+    renderMyLikes() {
+        const grid = document.getElementById('myLikesGrid');
+        if (!grid) return;
+
+        const currentUser = authManager.getCurrentUser();
+        const likedIds = currentUser.likedPacks || [];
+        const likes = this.packList.filter(pack => likedIds.includes(pack.id));
+
+        if (likes.length === 0) {
+            grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 2rem;">You have not liked any packs yet.</p>';
+            return;
+        }
+
+        grid.innerHTML = likes.map((pack, index) => this.createPackCardWithActions(pack, index, [])).join('');
+    }
+
+    createPackCardWithActions(pack, index = 0, actions = []) {
+        const tags = Array.isArray(pack.tags) ? pack.tags : (typeof pack.tags === 'string' ? pack.tags.split(',').map(t => t.trim()).filter(Boolean) : []);
+        const actionButtons = actions.map(action => `
+                <button type="button" class="btn btn-secondary pack-card-action" data-action="${action.name}" data-pack-id="${pack.id}">${action.label}</button>
+            `).join('');
+
+        return `
+            <div class="pack-card" data-pack-id="${pack.id}" style="animation-delay: ${index * 0.05}s;">
+                <div class="pack-card-image" style="background-image: url('${pack.cover}'); background-size: cover; background-position: center;">
+                    <span class="pack-category-badge">${pack.category || 'Uncategorized'}</span>
+                </div>
+                <div class="pack-card-body">
+                    <h3 class="pack-card-title">${pack.name}</h3>
+                    <p class="pack-card-author">${pack.author}</p>
+                    <p class="pack-card-description">${pack.description ? pack.description.substring(0, 80) : ''}...</p>
+                    <div class="pack-card-footer">
+                        <div class="pack-card-stats">
+                            <span class="stat"><span class="stat-icon">⬇️</span>${uiManager.formatNumber(pack.downloads || 0)}</span>
+                            <span class="stat"><span class="stat-icon">❤️</span>${uiManager.formatNumber(pack.likes || 0)}</span>
+                            <span class="stat"><span class="stat-icon">⭐</span>${(pack.rating || 0).toFixed(1)}</span>
+                        </div>
+                        <span class="pack-version">v${pack.version || '1.0.0'}</span>
+                    </div>
+                    ${actionButtons ? `<div class="pack-card-actions">${actionButtons}</div>` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    async showEditModal(packId) {
+        const pack = this.getPackById(packId);
+        if (!pack) {
+            uiManager.showNotification('Pack not found', 'error');
+            return;
+        }
+
+        const currentUser = authManager.getCurrentUser();
+        if (!currentUser || currentUser.username !== pack.uploadedBy) {
+            uiManager.showNotification('Only the author can edit this pack', 'error');
+            return;
+        }
+
+        document.getElementById('editPackId').value = pack.id;
+        document.getElementById('editPackName').value = pack.name || '';
+        document.getElementById('editPackCategory').value = pack.category || '';
+        document.getElementById('editPackDescription').value = pack.description || '';
+        document.getElementById('editPackFullDescription').value = pack.fullDescription || pack.description || '';
+        document.getElementById('editPackTags').value = Array.isArray(pack.tags) ? pack.tags.join(', ') : (pack.tags || '');
+
+        uiManager.openModal('editPackModal');
     }
 }
 

@@ -146,6 +146,31 @@ const SupabaseService = {
         };
     },
 
+    async uploadPackCover(file) {
+        if (!this.client) {
+            throw new Error('Supabase client is not initialized');
+        }
+
+        const filename = `${Date.now()}-${this.sanitizeFileName(file.name)}`;
+        const path = `covers/${filename}`;
+
+        const { data, error } = await this.client.storage.from(this.getBucketName()).upload(path, file, {
+            cacheControl: '3600',
+            upsert: false,
+            contentType: file.type || 'application/octet-stream'
+        });
+
+        if (error) {
+            throw error;
+        }
+
+        const publicUrl = await this.getPublicUrl(data.path);
+        return {
+            path: data.path,
+            publicUrl
+        };
+    },
+
     async savePackMetadata(packData) {
         if (!this.client) {
             throw new Error('Supabase client is not initialized');
