@@ -1,6 +1,5 @@
 services:
-  - type: web
+  - type: static
     name: pepper
-    env: static
     staticPublishPath: .
-    buildCommand: node build-supabase-config.js
+    buildCommand: npm run build
