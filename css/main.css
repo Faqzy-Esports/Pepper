@@ -389,16 +389,35 @@ main {
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
 }
 
+.hero-card-social {
+    background: linear-gradient(180deg, rgba(23, 28, 34, 0.98), #121417);
+}
+
+.hero-card-about {
+    min-height: 280px;
+    padding: 2rem;
+}
+
 .hero-card h3 {
     font-size: 1rem;
     margin-bottom: 1rem;
     color: var(--text-secondary);
 }
 
+.hero-card-about h3 {
+    font-size: 1.15rem;
+}
+
 .hero-card .hero-card-title {
-    font-size: 1.3rem;
+    font-size: 1.45rem;
     font-weight: 800;
     margin-bottom: 0.75rem;
+}
+
+.hero-card-about p {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: rgba(244, 249, 245, 0.88);
 }
 
 .hero-card .hero-card-line {
@@ -750,7 +769,8 @@ main {
     font-weight: 800;
 }
 
-.modal-close {
+.modal-close,
+.close-modal {
     background: none;
     border: none;
     color: var(--text-secondary);

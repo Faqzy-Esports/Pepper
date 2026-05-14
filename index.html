@@ -46,23 +46,20 @@
                     </div>
 
                     <aside class="hero-panel">
-                        <div class="hero-card">
-                            <h3>Featured right now</h3>
-                            <div class="hero-card-title">VeinMiner</div>
-                            <p>Mine the whole vein on a single ore with powerful, community-made datapacks.</p>
+                        <div class="hero-card hero-card-social">
+                            <h3>Pepper Info</h3>
+                            <div class="hero-card-title">Pepper</div>
+                            <p>Shared by hundreds of creators and already turning into one of the best pack websites.</p>
                             <div class="hero-card-line">
-                                <span>47.4M downloads</span>
-                                <span>4,701 likes</span>
+                                <span>© 2026 All Rights Reserved by Pepper</span>
+                                <span>🌶️</span>
                             </div>
                         </div>
-                        <div class="hero-card">
-                            <h3>Top categories</h3>
-                            <div class="category-list">
-                                <button class="category-pill active">Adventure</button>
-                                <button class="category-pill">Magic</button>
-                                <button class="category-pill">Equipment</button>
-                                <button class="category-pill">Optimization</button>
-                            </div>
+                        <div class="hero-card hero-card-about">
+                            <h3>About Pepper</h3>
+                            <p>Pepper is the hub for Minecraft creators and players to discover, share, and celebrate the best data packs and community-powered gameplay enhancements.</p>
+                            <br>
+                            <p>Pepper is the hub for Minecraft creators and players to discover, share, and celebrate the best data packs and community-powered gameplay enhancements.</p>
                         </div>
                     </aside>
                 </div>
@@ -72,22 +69,22 @@
                 <div class="container">
                     <div class="section-header">
                         <div>
-                            <h2 class="section-title">Fast stats & Why Pepper</h2>
+                            <h2 class="section-title">About Pepper</h2>
                             <p style="color: var(--text-secondary); margin-top: 0.5rem;">Real-time usage metrics and the reasons creators love using Pepper.</p>
                         </div>
                     </div>
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <div class="stat-number">47.5M</div>
-                            <div class="stat-label">Downloads</div>
+                            <div class="stat-number" id="homeUsersCount">0</div>
+                            <div class="stat-label">Users</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-number">622</div>
-                            <div class="stat-label">Active categories</div>
+                            <div class="stat-number" id="homeLikesCount">0</div>
+                            <div class="stat-label">Total Likes</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-number">12.8k</div>
-                            <div class="stat-label">Creators</div>
+                            <div class="stat-number" id="homePacksCount">0</div>
+                            <div class="stat-label">Uploaded Packs</div>
                         </div>
                     </div>
                     <div class="grid grid-3" style="margin-top: 2rem;">
@@ -124,7 +121,6 @@
                             <input type="text" class="form-input" id="searchInput" placeholder="Search datapacks...">
                         </div>
                         <div class="sort-card">
-                            <label for="sortFilter" style="color: var(--text-secondary); font-weight: 600;">Sort by</label>
                             <select class="form-select" id="sortFilter">
                                 <option value="downloads">Relevance</option>
                                 <option value="likes">Most Liked</option>
@@ -245,7 +241,8 @@
         <div class="modal-overlay"></div>
         <div class="modal-content">
             <div class="modal-header">
-                    <h2 class="modal-title">Pepper Account</h2>
+                <h2 class="modal-title">Pepper Account</h2>
+                <button class="modal-close close-modal" aria-label="Close auth modal">×</button>
             </div>
 
             <div id="authForms">

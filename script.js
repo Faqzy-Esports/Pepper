@@ -124,7 +124,7 @@ class PepperApp {
         document.getElementById('accountBtn').addEventListener('click', () => this.openModal('accountModal'));
 
         // Modal Close
-        document.querySelectorAll('.close-modal').forEach(btn => {
+        document.querySelectorAll('.modal-close, .close-modal').forEach(btn => {
             btn.addEventListener('click', (e) => this.closeModal(e.target.closest('.modal')));
         });
 

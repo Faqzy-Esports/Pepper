@@ -14,7 +14,21 @@ class PepperApp {
     }
 
     loadHomePage() {
-        // Home page uses static sections only, no home pack grids.
+        this.updateHomeStats();
+    }
+
+    updateHomeStats() {
+        const userCount = Object.keys(dataManager.users || {}).length;
+        const likeCount = (dataManager.packs || []).reduce((sum, pack) => sum + (pack.likes || 0), 0);
+        const packCount = (dataManager.packs || []).length;
+
+        const usersElement = document.getElementById('homeUsersCount');
+        const likesElement = document.getElementById('homeLikesCount');
+        const packsElement = document.getElementById('homePacksCount');
+
+        if (usersElement) usersElement.textContent = uiManager.formatNumber(userCount);
+        if (likesElement) likesElement.textContent = uiManager.formatNumber(likeCount);
+        if (packsElement) packsElement.textContent = uiManager.formatNumber(packCount);
     }
 
     setupNavigation() {
@@ -63,6 +77,10 @@ class PepperApp {
         // Load browse page data if needed
         if (page === 'browse') {
             setTimeout(() => this.loadBrowsePage(), 100);
+        }
+
+        if (page === 'home') {
+            this.loadHomePage();
         }
 
         // Load detail page if needed
@@ -213,6 +231,7 @@ class PepperApp {
             uiManager.showNotification('Pack uploaded successfully!', 'success');
             uiManager.closeModal(document.getElementById('uploadModal'));
             document.getElementById('uploadPackForm').reset();
+            this.updateUI();
             this.navigateTo('browse');
         });
 
