@@ -16,7 +16,12 @@ const SupabaseService = {
             return;
         }
 
-        this.client = supabase.createClient(config.url, config.anonKey);
+        this.client = supabase.createClient(config.url, config.anonKey, {
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true
+            }
+        });
     },
 
     isReady() {

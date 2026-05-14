@@ -88,16 +88,24 @@ class AuthManager {
     }
 
     async login(email, password) {
-        const passwordHash = await this.hashPassword(password);
-
         if (!SupabaseService?.isReady?.()) {
             console.warn('Supabase is not configured or unavailable.');
             return false;
         }
 
         try {
+            const { data: loginData, error: loginError } = await SupabaseService.client.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            if (loginError || !loginData?.session) {
+                console.error('Supabase auth login error:', loginError);
+                return false;
+            }
+
             const user = await SupabaseService.fetchUserByEmail(email);
-            if (user && user.password_hash === passwordHash) {
+            if (user) {
                 this.currentUser = await this.normalizeUserRecord(user);
                 this.saveCurrentUser();
                 return true;
@@ -110,8 +118,6 @@ class AuthManager {
     }
 
     async register(email, username, password) {
-        const passwordHash = await this.hashPassword(password);
-
         if (!SupabaseService?.isReady?.()) {
             console.warn('Supabase is not configured or unavailable.');
             return false;
@@ -123,10 +129,20 @@ class AuthManager {
                 return false;
             }
 
+            const { data: signUpData, error: signUpError } = await SupabaseService.client.auth.signUp({
+                email,
+                password
+            });
+
+            if (signUpError || !signUpData?.user) {
+                console.error('Supabase auth register error:', signUpError);
+                return false;
+            }
+
             const user = await SupabaseService.createUser({
                 email,
                 username,
-                password_hash: passwordHash,
+                password_hash: await this.hashPassword(password),
                 liked_packs: [],
                 uploaded_packs: [],
                 display_name: username,
@@ -147,7 +163,15 @@ class AuthManager {
         return false;
     }
 
-    logout() {
+    async logout() {
+        if (SupabaseService?.isReady?.() && SupabaseService.client) {
+            try {
+                await SupabaseService.client.auth.signOut();
+            } catch (error) {
+                console.warn('Supabase auth sign out failed:', error);
+            }
+        }
+
         this.currentUser = null;
         this.saveCurrentUser();
     }
