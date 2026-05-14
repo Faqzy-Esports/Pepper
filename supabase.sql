@@ -1,9 +1,9 @@
 -- Supabase SQL schema for Pepper resource pack uploads
--- Create a storage bucket for ZIP uploads.
+-- Create a public storage bucket for ZIP uploads.
 -- If this fails, create the bucket directly in the Supabase Dashboard Storage panel.
-insert into storage.buckets (id, name)
-values ('packs', 'packs')
-on conflict (id) do nothing;
+insert into storage.buckets (id, name, public)
+values ('packs', 'packs', true)
+on conflict (id) do update set public = excluded.public, name = excluded.name;
 
 -- Create a packs metadata table
 CREATE TABLE IF NOT EXISTS packs (
@@ -12,22 +12,22 @@ CREATE TABLE IF NOT EXISTS packs (
     author TEXT NOT NULL,
     category TEXT NOT NULL,
     description TEXT NOT NULL,
-    fullDescription TEXT,
+    "fullDescription" TEXT,
     version TEXT,
     downloads INTEGER DEFAULT 0,
     likes INTEGER DEFAULT 0,
     cover TEXT,
     gallery JSONB DEFAULT '[]'::jsonb,
     versions JSONB DEFAULT '[]'::jsonb,
-    uploadedBy TEXT,
+    "uploadedBy" TEXT,
     featured BOOLEAN DEFAULT FALSE,
-    uploadDate TIMESTAMPTZ DEFAULT NOW(),
+    "uploadDate" TIMESTAMPTZ DEFAULT NOW(),
     tags TEXT[] DEFAULT '{}',
     compatibility TEXT[] DEFAULT '{}',
     rating NUMERIC(3,2) DEFAULT 0,
     downloads_all_time INTEGER DEFAULT 0,
-    downloadUrl TEXT,
-    filePath TEXT
+    "downloadUrl" TEXT,
+    "filePath" TEXT
 );
 
 CREATE TABLE IF NOT EXISTS users (
