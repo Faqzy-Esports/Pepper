@@ -2,6 +2,11 @@ const SupabaseService = {
     client: null,
 
     init() {
+        if (typeof supabase === 'undefined') {
+            console.warn('Supabase library is not loaded yet.');
+            return;
+        }
+
         const config = window.PEPPER_SUPABASE;
         const placeholderUrl = 'REPLACE_WITH_SUPABASE_URL';
         const placeholderKey = 'REPLACE_WITH_SUPABASE_ANON_KEY';
@@ -129,5 +134,3 @@ const SupabaseService = {
         return data;
     },
 };
-
-SupabaseService.init();

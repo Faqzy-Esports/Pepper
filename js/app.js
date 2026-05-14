@@ -11,6 +11,11 @@ class PepperApp {
         this.setupTabHandlers();
         this.updateUI();
         this.loadHomePage();
+
+        // Initialize Supabase after everything is loaded
+        if (SupabaseService) {
+            SupabaseService.init();
+        }
     }
 
     loadHomePage() {
