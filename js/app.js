@@ -73,7 +73,7 @@ class PepperApp {
 
     setupFormHandlers() {
         // Login Form
-        document.getElementById('loginForm')?.addEventListener('submit', (e) => {
+        document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
@@ -83,7 +83,7 @@ class PepperApp {
                 return;
             }
 
-            if (authManager.login(email, password)) {
+            if (await authManager.login(email, password)) {
                 uiManager.showNotification('Logged in successfully!', 'success');
                 uiManager.closeModal(document.getElementById('authModal'));
                 this.updateUI();
@@ -93,7 +93,7 @@ class PepperApp {
         });
 
         // Register Form
-        document.getElementById('registerForm')?.addEventListener('submit', (e) => {
+        document.getElementById('registerForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('registerEmail').value.trim();
             const username = document.getElementById('registerUsername').value.trim();
@@ -115,7 +115,7 @@ class PepperApp {
                 return;
             }
 
-            if (authManager.register(email, username, password)) {
+            if (await authManager.register(email, username, password)) {
                 uiManager.showNotification('Account created successfully!', 'success');
                 uiManager.closeModal(document.getElementById('authModal'));
                 this.updateUI();
@@ -207,7 +207,7 @@ class PepperApp {
             }
 
             if (newPack && newPack.id) {
-                authManager.addUploadedPack(newPack.id);
+                await authManager.addUploadedPack(newPack.id);
             }
 
             uiManager.showNotification('Pack uploaded successfully!', 'success');
@@ -265,7 +265,7 @@ class PepperApp {
         });
 
         // Like button
-        document.addEventListener('click', (e) => {
+        document.addEventListener('click', async (e) => {
             const likeTarget = e.target.closest('#likePack');
             if (likeTarget) {
                 e.preventDefault();
@@ -278,9 +278,9 @@ class PepperApp {
                     return;
                 }
 
-                authManager.toggleLike(packId);
+                const success = await authManager.toggleLike(packId);
                 const pack = dataManager.getPack(packId);
-                if (pack) {
+                if (success && pack) {
                     const packLikesEl = document.getElementById('packLikes');
                     const isLiked = authManager.isPackLiked(packId);
 

@@ -75,6 +75,58 @@ const SupabaseService = {
         }
 
         return data || [];
+    },
+
+    async fetchUserByEmail(email) {
+        if (!this.client) {
+            throw new Error('Supabase client is not initialized');
+        }
+
+        const { data, error } = await this.client.from('users').select('*').eq('email', email).single();
+        if (error && error.code !== 'PGRST116') {
+            throw error;
+        }
+
+        return data || null;
+    },
+
+    async createUser(userData) {
+        if (!this.client) {
+            throw new Error('Supabase client is not initialized');
+        }
+
+        const { data, error } = await this.client.from('users').insert([userData]).select().single();
+        if (error) {
+            throw error;
+        }
+
+        return data;
+    },
+
+    async updateUserUploads(email, uploadedPacks) {
+        if (!this.client) {
+            throw new Error('Supabase client is not initialized');
+        }
+
+        const { data, error } = await this.client.from('users').update({ uploaded_packs: uploadedPacks }).eq('email', email).select().single();
+        if (error) {
+            throw error;
+        }
+
+        return data;
+    },
+
+    async updateUserLikes(email, likedPacks) {
+        if (!this.client) {
+            throw new Error('Supabase client is not initialized');
+        }
+
+        const { data, error } = await this.client.from('users').update({ liked_packs: likedPacks }).eq('email', email).select().single();
+        if (error) {
+            throw error;
+        }
+
+        return data;
     }
 };
 
