@@ -292,8 +292,26 @@ class PepperApp {
         document.getElementById('profileForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const displayName = document.getElementById('profileDisplayName').value.trim();
-            const avatarUrl = document.getElementById('profileAvatarUrl').value.trim();
+            const avatarUrlInput = document.getElementById('profileAvatarUrl').value.trim();
+            const avatarFile = document.getElementById('profileAvatarFile')?.files?.[0];
             const bio = document.getElementById('profileBio').value.trim();
+
+            let avatarUrl = avatarUrlInput || '';
+            if (avatarFile) {
+                if (!SupabaseService?.isReady?.()) {
+                    uiManager.showNotification('Supabase is not configured. Cannot upload an avatar image.', 'error');
+                    return;
+                }
+
+                try {
+                    const { publicUrl } = await SupabaseService.uploadProfileAvatar(avatarFile);
+                    avatarUrl = publicUrl;
+                } catch (error) {
+                    console.error('Avatar upload failed:', error);
+                    uiManager.showNotification('Avatar upload failed. Try a different image.', 'error');
+                    return;
+                }
+            }
 
             if (await authManager.updateProfile({ displayName, bio, avatarUrl })) {
                 uiManager.showNotification('Profile updated successfully!', 'success');

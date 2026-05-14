@@ -648,10 +648,35 @@ body {
     border-radius: 16px;
     width: 90%;
     max-width: 600px;
-    max-height: 80vh;
+    max-height: calc(100vh - 3rem);
     overflow-y: auto;
+    overflow-x: hidden;
     box-shadow: 0 20px 60px rgba(255, 68, 68, 0.3);
     animation: slideIn 0.3s ease;
+}
+
+.account-avatar,
+.account-initial {
+    display: inline-flex;
+    width: 1.9rem;
+    height: 1.9rem;
+    min-width: 1.9rem;
+    border-radius: 999px;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+}
+
+.account-avatar {
+    object-fit: cover;
+}
+
+.account-initial {
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
 }
 
 @keyframes slideIn {

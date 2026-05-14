@@ -120,7 +120,14 @@ class UIManager {
 
         if (authManager.isLoggedIn()) {
             const user = authManager.getCurrentUser();
-            btn.textContent = user.username;
+            const displayName = user.displayName || user.username;
+            const initial = displayName.charAt(0).toUpperCase();
+
+            if (user.avatarUrl) {
+                btn.innerHTML = `<img src="${user.avatarUrl}" alt="${displayName}" class="account-avatar"> ${displayName}`;
+            } else {
+                btn.innerHTML = `<span class="account-initial">${initial}</span> ${displayName}`;
+            }
             btn.dataset.logged = 'true';
         } else {
             btn.textContent = 'Account';

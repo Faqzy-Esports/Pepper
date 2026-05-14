@@ -30,6 +30,32 @@ const SupabaseService = {
         return 'packs';
     },
 
+    async createSignedUrl(path, expiresIn = 60 * 60 * 24 * 7) {
+        if (!this.client) {
+            throw new Error('Supabase client is not initialized');
+        }
+
+        const { data, error } = await this.client.storage.from(this.getBucketName()).createSignedUrl(path, expiresIn);
+        if (error) {
+            throw error;
+        }
+
+        return data?.signedUrl || '';
+    },
+
+    async getPublicUrl(path) {
+        if (!this.client) {
+            throw new Error('Supabase client is not initialized');
+        }
+
+        const { data, error } = await this.client.storage.from(this.getBucketName()).getPublicUrl(path);
+        if (!error && data?.publicUrl) {
+            return data.publicUrl;
+        }
+
+        return this.createSignedUrl(path);
+    },
+
     async uploadPackZip(file) {
         if (!this.client) {
             throw new Error('Supabase client is not initialized');
@@ -48,14 +74,35 @@ const SupabaseService = {
             throw error;
         }
 
-        const { data: publicData, error: publicError } = await this.client.storage.from(this.getBucketName()).getPublicUrl(data.path);
-        if (publicError) {
-            throw publicError;
-        }
-
+        const publicUrl = await this.getPublicUrl(data.path);
         return {
             path: data.path,
-            publicUrl: publicData?.publicUrl || ''
+            publicUrl
+        };
+    },
+
+    async uploadProfileAvatar(file) {
+        if (!this.client) {
+            throw new Error('Supabase client is not initialized');
+        }
+
+        const filename = `${Date.now()}-${file.name.toLowerCase().replace(/\s+/g, '-')}`;
+        const path = `avatars/${filename}`;
+
+        const { data, error } = await this.client.storage.from(this.getBucketName()).upload(path, file, {
+            cacheControl: '3600',
+            upsert: false,
+            contentType: file.type || 'application/octet-stream'
+        });
+
+        if (error) {
+            throw error;
+        }
+
+        const publicUrl = await this.getPublicUrl(data.path);
+        return {
+            path: data.path,
+            publicUrl
         };
     },
 
