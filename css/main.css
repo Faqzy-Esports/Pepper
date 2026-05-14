@@ -252,7 +252,7 @@ body::before {
 #accountButton {
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    padding: 0.65rem 1rem;
+    padding: 0.25rem 1rem;
     border-radius: 999px;
     color: var(--text-primary);
     cursor: pointer;

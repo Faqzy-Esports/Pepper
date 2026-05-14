@@ -67,7 +67,10 @@ const SupabaseService = {
 
         const { data, error } = await this.client.storage.from(this.getBucketName()).getPublicUrl(path);
         if (!error && data?.publicUrl) {
-            return data.publicUrl;
+            const publicUrl = data.publicUrl;
+            if (typeof publicUrl === 'string' && publicUrl.startsWith('http') && publicUrl.includes('/public/')) {
+                return publicUrl;
+            }
         }
 
         return this.createSignedUrl(path);
@@ -116,7 +119,7 @@ const SupabaseService = {
             throw error;
         }
 
-        const publicUrl = await this.getPublicUrl(data.path);
+        const publicUrl = await this.createSignedUrl(data.path);
         return {
             path: data.path,
             publicUrl
