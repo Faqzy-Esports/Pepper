@@ -306,8 +306,8 @@ class PepperApp {
                 }
 
                 try {
-                    const { publicUrl } = await SupabaseService.uploadProfileAvatar(avatarFile);
-                    avatarUrl = publicUrl;
+                    const { path: avatarPath } = await SupabaseService.uploadProfileAvatar(avatarFile);
+                    avatarUrl = avatarPath;
                 } catch (error) {
                     console.error('Avatar upload failed:', error);
                     if (error?.message) {
@@ -775,6 +775,26 @@ class PepperApp {
         this.updateUI();
         this.updateHomeStats();
         this.navigateTo('home');
+    }
+
+    showMyUploads() {
+        if (!authManager.isLoggedIn()) {
+            uiManager.showNotification('Please login to view your uploads.', 'error');
+            uiManager.openModal('authModal');
+            return;
+        }
+        uiManager.showNotification('Showing your uploads is coming soon.', 'info');
+        this.navigateTo('browse');
+    }
+
+    showMyLikes() {
+        if (!authManager.isLoggedIn()) {
+            uiManager.showNotification('Please login to view your likes.', 'error');
+            uiManager.openModal('authModal');
+            return;
+        }
+        uiManager.showNotification('Showing your liked packs is coming soon.', 'info');
+        this.navigateTo('browse');
     }
 }
 
