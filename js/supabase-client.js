@@ -30,6 +30,15 @@ const SupabaseService = {
         return 'packs';
     },
 
+    sanitizeFileName(name) {
+        return name
+            .toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9.\-_]/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^[-.]+|[-.]+$/g, '');
+    },
+
     async createSignedUrl(path, expiresIn = 60 * 60 * 24 * 7) {
         if (!this.client) {
             throw new Error('Supabase client is not initialized');
@@ -61,7 +70,7 @@ const SupabaseService = {
             throw new Error('Supabase client is not initialized');
         }
 
-        const filename = `${Date.now()}-${file.name.toLowerCase().replace(/\s+/g, '-')}`;
+        const filename = `${Date.now()}-${this.sanitizeFileName(file.name)}`;
         const path = `uploads/${filename}`;
 
         const { data, error } = await this.client.storage.from(this.getBucketName()).upload(path, file, {
@@ -86,7 +95,7 @@ const SupabaseService = {
             throw new Error('Supabase client is not initialized');
         }
 
-        const filename = `${Date.now()}-${file.name.toLowerCase().replace(/\s+/g, '-')}`;
+        const filename = `${Date.now()}-${this.sanitizeFileName(file.name)}`;
         const path = `avatars/${filename}`;
 
         const { data, error } = await this.client.storage.from(this.getBucketName()).upload(path, file, {

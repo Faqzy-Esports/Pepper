@@ -224,7 +224,10 @@ class PepperApp {
                     packData.downloadUrl = publicUrl;
                     packData.filePath = path;
                 } catch (error) {
-                    console.error(error);
+                    console.error('Pack upload failed:', error);
+                    if (error?.message) {
+                        console.error('Supabase pack upload error message:', error.message);
+                    }
                     uiManager.showNotification('Supabase upload failed. Check configuration and try again.', 'error');
                     return;
                 }
@@ -307,6 +310,9 @@ class PepperApp {
                     avatarUrl = publicUrl;
                 } catch (error) {
                     console.error('Avatar upload failed:', error);
+                    if (error?.message) {
+                        console.error('Supabase avatar error message:', error.message);
+                    }
                     uiManager.showNotification('Avatar upload failed. Try a different image.', 'error');
                     return;
                 }
@@ -735,6 +741,25 @@ class PepperApp {
             // Populate profile form
             document.getElementById('profileDisplayName').value = user.displayName || user.username;
             document.getElementById('profileBio').value = user.bio || '';
+
+            const summaryAvatar = document.getElementById('profileSummaryAvatar');
+            const summaryName = document.getElementById('profileSummaryName');
+            const summaryEmail = document.getElementById('profileSummaryEmail');
+            const summaryBio = document.getElementById('profileSummaryBio');
+
+            const displayName = user.displayName || user.username;
+            const initial = displayName.charAt(0).toUpperCase();
+
+            if (summaryAvatar) {
+                if (user.avatarUrl) {
+                    summaryAvatar.innerHTML = `<img src="${user.avatarUrl}" alt="${displayName}">`;
+                } else {
+                    summaryAvatar.innerHTML = `<span>${initial}</span>`;
+                }
+            }
+            if (summaryName) summaryName.textContent = displayName;
+            if (summaryEmail) summaryEmail.textContent = user.email || '';
+            if (summaryBio) summaryBio.textContent = user.bio || '';
 
             if (logoutBtn) logoutBtn.style.display = 'block';
         } else {
