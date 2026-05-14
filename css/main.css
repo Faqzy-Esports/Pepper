@@ -327,7 +327,6 @@ main {
 .hero h1::after {
     content: '';
     display: block;
-    width: 120px;
     height: 4px;
     margin: 1.5rem auto 0;
     background: linear-gradient(90deg, rgba(212, 57, 57, 0.95), rgba(212, 57, 57, 0.2));
@@ -337,7 +336,6 @@ main {
 .hero p {
     font-size: 1.15rem;
     color: rgba(244, 249, 245, 0.82);
-    margin: 1.5rem auto 2.5rem;
     max-width: 680px;
 }
 
@@ -355,16 +353,27 @@ main {
 .hero-grid {
     display: grid;
     grid-template-columns: 1.6fr 1.1fr;
-    align-items: center;
+    align-items: start;
     gap: 2rem;
 }
 
 .hero-copy {
     text-align: left;
+    max-width: 720px;
+    display: grid;
+    gap: 1.4rem;
+    padding-right: 1rem;
 }
 
-.hero-copy p {
-    max-width: 620px;
+.hero-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+}
+
+.hero-buttons .btn-secondary {
+    min-width: 180px;
 }
 
 .hero-panel {
@@ -412,13 +421,7 @@ main {
     font-weight: 700;
     letter-spacing: 0.02em;
     font-size: 0.92rem;
-}
-
-.home-categories {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-top: 1.5rem;
+    width: 115px;
 }
 
 .category-pill {

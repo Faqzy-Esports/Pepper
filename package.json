@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "node build-supabase-config.js",
-    "start": "npm run build"
+    "build": "node build-supabase-config.js"
   }
 }
