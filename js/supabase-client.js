@@ -20,6 +20,9 @@ const SupabaseService = {
     },
 
     isReady() {
+        if (!this.client && typeof supabase !== 'undefined') {
+            this.init();
+        }
         return Boolean(this.client);
     },
 

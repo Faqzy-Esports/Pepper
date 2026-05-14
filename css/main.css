@@ -526,28 +526,6 @@ main {
     margin-bottom: 1rem;
 }
 
-.view-badges {
-    display: flex;
-    gap: 0.75rem;
-}
-
-.view-badge {
-    border-radius: 999px;
-    padding: 0.6rem 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: #191c20;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.view-badge.active,
-.view-badge:hover {
-    background: rgba(212, 57, 57, 0.12);
-    color: var(--text-primary);
-    border-color: rgba(212, 57, 57, 0.3);
-}
-
 @media (max-width: 1024px) {
     .hero-grid {
         grid-template-columns: 1fr;

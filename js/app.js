@@ -11,11 +11,6 @@ class PepperApp {
         this.setupTabHandlers();
         this.updateUI();
         this.loadHomePage();
-
-        // Initialize Supabase after everything is loaded
-        if (SupabaseService) {
-            SupabaseService.init();
-        }
     }
 
     loadHomePage() {
@@ -605,7 +600,6 @@ class PepperApp {
     loadBrowsePage() {
         const searchInput = document.getElementById('searchInput');
         const headerSearchInput = document.getElementById('headerSearchInput');
-        const categoryFilter = document.getElementById('categoryFilter');
         const sortFilter = document.getElementById('sortFilter');
         const browsePackGrid = document.getElementById('browsePackGrid');
 
@@ -629,7 +623,6 @@ class PepperApp {
 
         const updateResults = () => {
             const searchTerm = (searchInput?.value || headerSearchInput?.value || '').toLowerCase();
-            const category = categoryFilter?.value || '';
             const sort = sortFilter?.value || 'downloads';
 
             let packs = [...dataManager.packs];
@@ -641,10 +634,6 @@ class PepperApp {
                     p.author.toLowerCase().includes(searchTerm) ||
                     (p.tags && p.tags.some(t => t.toLowerCase().includes(searchTerm)))
                 );
-            }
-
-            if (category) {
-                packs = packs.filter(p => p.category === category);
             }
 
             // Sort
@@ -687,10 +676,6 @@ class PepperApp {
             });
         }
 
-        if (categoryFilter) {
-            categoryFilter.onchange = null;
-            categoryFilter.addEventListener('change', updateResults);
-        }
         if (sortFilter) {
             sortFilter.onchange = null;
             sortFilter.addEventListener('change', updateResults);
