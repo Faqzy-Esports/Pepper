@@ -37,5 +37,15 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     liked_packs JSONB DEFAULT '[]'::jsonb,
-    uploaded_packs JSONB DEFAULT '[]'::jsonb
+    uploaded_packs JSONB DEFAULT '[]'::jsonb,
+    display_name TEXT,
+    bio TEXT,
+    avatar_url TEXT,
+    website TEXT
 );
+
+-- Add profile columns if they don't exist (for existing databases)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS website TEXT;

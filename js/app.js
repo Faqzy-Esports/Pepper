@@ -23,17 +23,42 @@ class PepperApp {
     }
 
     updateHomeStats() {
-        const userCount = Object.keys(dataManager.users || {}).length;
-        const likeCount = (dataManager.packs || []).reduce((sum, pack) => sum + (pack.likes || 0), 0);
-        const packCount = (dataManager.packs || []).length;
+        const updateStats = async () => {
+            let userCount = 0;
+            let likeCount = 0;
+            let packCount = 0;
 
-        const usersElement = document.getElementById('homeUsersCount');
-        const likesElement = document.getElementById('homeLikesCount');
-        const packsElement = document.getElementById('homePacksCount');
+            if (SupabaseService?.isReady?.()) {
+                try {
+                    [userCount, likeCount, packCount] = await Promise.all([
+                        SupabaseService.getUserCount(),
+                        SupabaseService.getTotalLikes(),
+                        SupabaseService.getPackCount()
+                    ]);
+                } catch (error) {
+                    console.error('Failed to fetch stats from Supabase:', error);
+                    // Fall back to localStorage
+                    userCount = Object.keys(dataManager.users || {}).length;
+                    likeCount = (dataManager.packs || []).reduce((sum, pack) => sum + (pack.likes || 0), 0);
+                    packCount = (dataManager.packs || []).length;
+                }
+            } else {
+                // Use localStorage
+                userCount = Object.keys(dataManager.users || {}).length;
+                likeCount = (dataManager.packs || []).reduce((sum, pack) => sum + (pack.likes || 0), 0);
+                packCount = (dataManager.packs || []).length;
+            }
 
-        if (usersElement) usersElement.textContent = uiManager.formatNumber(userCount);
-        if (likesElement) likesElement.textContent = uiManager.formatNumber(likeCount);
-        if (packsElement) packsElement.textContent = uiManager.formatNumber(packCount);
+            const usersElement = document.getElementById('homeUsersCount');
+            const likesElement = document.getElementById('homeLikesCount');
+            const packsElement = document.getElementById('homePacksCount');
+
+            if (usersElement) usersElement.textContent = uiManager.formatNumber(userCount);
+            if (likesElement) likesElement.textContent = uiManager.formatNumber(likeCount);
+            if (packsElement) packsElement.textContent = uiManager.formatNumber(packCount);
+        };
+
+        updateStats();
     }
 
     setupNavigation() {
@@ -344,6 +369,13 @@ class PepperApp {
                 if (pack) {
                     pack.downloads++;
                     dataManager.savePacks();
+
+                    // Update Supabase if available
+                    if (SupabaseService?.isReady?.()) {
+                        SupabaseService.updatePackDownloads(packId, pack.downloads).catch(error => {
+                            console.error('Failed to update downloads in Supabase:', error);
+                        });
+                    }
 
                     const packDownloadsEl = document.getElementById('packDownloads');
                     if (packDownloadsEl) {

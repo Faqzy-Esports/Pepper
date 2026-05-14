@@ -121,12 +121,38 @@ const SupabaseService = {
         return data;
     },
 
-    async updateProfile(email, profileData) {
+    async getUserCount() {
         if (!this.client) {
             throw new Error('Supabase client is not initialized');
         }
 
-        const { data, error } = await this.client.from('users').update(profileData).eq('email', email).select().single();
+        const { count, error } = await this.client.from('users').select('*', { count: 'exact', head: true });
+        if (error) {
+            throw error;
+        }
+
+        return count || 0;
+    },
+
+    async getTotalLikes() {
+        if (!this.client) {
+            throw new Error('Supabase client is not initialized');
+        }
+
+        const { data, error } = await this.client.from('packs').select('likes');
+        if (error) {
+            throw error;
+        }
+
+        return data.reduce((sum, pack) => sum + (pack.likes || 0), 0);
+    },
+
+    async updatePackDownloads(packId, downloads) {
+        if (!this.client) {
+            throw new Error('Supabase client is not initialized');
+        }
+
+        const { data, error } = await this.client.from('packs').update({ downloads }).eq('id', packId).select().single();
         if (error) {
             throw error;
         }
