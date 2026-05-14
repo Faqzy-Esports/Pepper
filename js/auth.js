@@ -163,15 +163,17 @@ class AuthManager {
 
         const updates = {
             displayName: profileData.displayName || this.currentUser.displayName,
-            bio: profileData.bio || this.currentUser.bio,
-            avatarUrl: profileData.avatarUrl || this.currentUser.avatarUrl
+            bio: profileData.bio || this.currentUser.bio
         };
+        if (profileData.avatarUrl) {
+            updates.avatarUrl = profileData.avatarUrl;
+        }
 
         try {
             await SupabaseService.updateProfile(this.currentUser.email, {
                 display_name: updates.displayName,
                 bio: updates.bio,
-                avatar_url: updates.avatarUrl
+                ...(updates.avatarUrl ? { avatar_url: updates.avatarUrl } : {})
             });
 
             this.currentUser = { ...this.currentUser, ...updates };

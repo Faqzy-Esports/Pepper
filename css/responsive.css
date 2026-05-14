@@ -129,6 +129,8 @@
     .modal-content {
         width: 95%;
         padding: 1.5rem;
+        max-height: calc(100vh - 2rem);
+        overflow-y: auto;
     }
 
     #notificationContainer {

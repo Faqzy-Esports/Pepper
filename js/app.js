@@ -292,11 +292,10 @@ class PepperApp {
         document.getElementById('profileForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const displayName = document.getElementById('profileDisplayName').value.trim();
-            const avatarUrlInput = document.getElementById('profileAvatarUrl').value.trim();
             const avatarFile = document.getElementById('profileAvatarFile')?.files?.[0];
             const bio = document.getElementById('profileBio').value.trim();
 
-            let avatarUrl = avatarUrlInput || '';
+            let avatarUrl;
             if (avatarFile) {
                 if (!SupabaseService?.isReady?.()) {
                     uiManager.showNotification('Supabase is not configured. Cannot upload an avatar image.', 'error');
@@ -313,7 +312,10 @@ class PepperApp {
                 }
             }
 
-            if (await authManager.updateProfile({ displayName, bio, avatarUrl })) {
+            const profileUpdates = { displayName, bio };
+            if (avatarUrl) profileUpdates.avatarUrl = avatarUrl;
+
+            if (await authManager.updateProfile(profileUpdates)) {
                 uiManager.showNotification('Profile updated successfully!', 'success');
                 this.updateUI();
             } else {
@@ -733,7 +735,6 @@ class PepperApp {
             // Populate profile form
             document.getElementById('profileDisplayName').value = user.displayName || user.username;
             document.getElementById('profileBio').value = user.bio || '';
-            document.getElementById('profileAvatarUrl').value = user.avatarUrl || '';
 
             if (logoutBtn) logoutBtn.style.display = 'block';
         } else {
