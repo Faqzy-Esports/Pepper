@@ -57,6 +57,14 @@ const SupabaseService = {
             throw new Error('Supabase client is not initialized');
         }
 
+        if (!path) {
+            return '';
+        }
+
+        if (path.startsWith('http')) {
+            return path;
+        }
+
         const { data, error } = await this.client.storage.from(this.getBucketName()).getPublicUrl(path);
         if (!error && data?.publicUrl) {
             return data.publicUrl;
@@ -108,7 +116,7 @@ const SupabaseService = {
             throw error;
         }
 
-        const publicUrl = await this.createSignedUrl(data.path);
+        const publicUrl = await this.getPublicUrl(data.path);
         return {
             path: data.path,
             publicUrl

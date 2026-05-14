@@ -250,17 +250,47 @@ body::before {
 }
 
 #accountButton {
-    background: #181b1f;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 0.75rem 1.2rem;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 0.65rem 1rem;
     border-radius: 999px;
     color: var(--text-primary);
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-height: 44px;
+    transition: var(--transition);
 }
 
 #accountButton:hover {
     border-color: rgba(212, 57, 57, 0.35);
     color: var(--primary);
+    background: rgba(212, 57, 57, 0.08);
+}
+
+.account-avatar,
+.account-initial {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.account-avatar {
+    object-fit: cover;
+}
+
+.account-initial {
+    font-weight: 700;
+    color: #ffffff;
+    font-size: 0.95rem;
 }
 
 /* Main Content */
@@ -739,6 +769,28 @@ main {
 .modal-title {
     font-size: 1.5rem;
     font-weight: 800;
+}
+
+.modal-close {
+    appearance: none;
+    border: none;
+    background: rgba(255, 255, 255, 0.06);
+    width: 2.8rem;
+    height: 2.8rem;
+    border-radius: 50%;
+    color: #ffffff;
+    font-size: 1.2rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.modal-close:hover {
+    background: rgba(212, 57, 57, 0.18);
+    transform: translateY(-1px);
 }
 
     .profile-summary {

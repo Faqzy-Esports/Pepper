@@ -20,6 +20,27 @@ class AuthManager {
         return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
     }
 
+    async normalizeUserRecord(user) {
+        let avatarUrl = user.avatar_url || '';
+        if (avatarUrl && !avatarUrl.startsWith('http') && SupabaseService?.isReady?.()) {
+            try {
+                avatarUrl = await SupabaseService.getPublicUrl(avatarUrl);
+            } catch (error) {
+                console.warn('Could not resolve stored avatar URL:', error);
+            }
+        }
+
+        return {
+            email: user.email,
+            username: user.username,
+            likedPacks: user.liked_packs || [],
+            uploadedPacks: user.uploaded_packs || [],
+            displayName: user.display_name || user.username,
+            bio: user.bio || '',
+            avatarUrl
+        };
+    }
+
     async login(email, password) {
         const passwordHash = await this.hashPassword(password);
 
@@ -31,15 +52,7 @@ class AuthManager {
         try {
             const user = await SupabaseService.fetchUserByEmail(email);
             if (user && user.password_hash === passwordHash) {
-                this.currentUser = {
-                    email: user.email,
-                    username: user.username,
-                    likedPacks: user.liked_packs || [],
-                    uploadedPacks: user.uploaded_packs || [],
-                    displayName: user.display_name || user.username,
-                    bio: user.bio || '',
-                    avatarUrl: user.avatar_url || ''
-                };
+                this.currentUser = await this.normalizeUserRecord(user);
                 this.saveCurrentUser();
                 return true;
             }
@@ -76,15 +89,7 @@ class AuthManager {
             });
 
             if (user) {
-                this.currentUser = {
-                    email: user.email,
-                    username: user.username,
-                    likedPacks: [],
-                    uploadedPacks: [],
-                    displayName: user.display_name || user.username,
-                    bio: user.bio || '',
-                    avatarUrl: user.avatar_url || ''
-                };
+                this.currentUser = await this.normalizeUserRecord(user);
                 this.saveCurrentUser();
                 return true;
             }
@@ -181,6 +186,9 @@ class AuthManager {
             return true;
         } catch (error) {
             console.error('Failed to update Supabase profile:', error);
+            if (error?.message) {
+                console.error('Profile update error message:', error.message);
+            }
             return false;
         }
     }
