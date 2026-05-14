@@ -1,20 +1,15 @@
 // Authentication Module
 class AuthManager {
     constructor() {
-        this.currentUser = this.loadCurrentUser();
+        this.currentUser = null;
     }
 
     loadCurrentUser() {
-        const stored = localStorage.getItem('pepper_current_user');
-        return stored ? JSON.parse(stored) : null;
+        return null;
     }
 
     saveCurrentUser() {
-        if (this.currentUser) {
-            localStorage.setItem('pepper_current_user', JSON.stringify(this.currentUser));
-        } else {
-            localStorage.removeItem('pepper_current_user');
-        }
+        return;
     }
 
     async hashPassword(password) {
@@ -28,100 +23,76 @@ class AuthManager {
     async login(email, password) {
         const passwordHash = await this.hashPassword(password);
 
-        if (SupabaseService?.isReady?.()) {
-            try {
-                const user = await SupabaseService.fetchUserByEmail(email);
-                if (user && user.password_hash === passwordHash) {
-                    this.currentUser = {
-                        email: user.email,
-                        username: user.username,
-                        likedPacks: user.liked_packs || [],
-                        uploadedPacks: user.uploaded_packs || [],
-                        displayName: user.display_name || user.username,
-                        bio: user.bio || '',
-                        avatarUrl: user.avatar_url || '',
-                        website: user.website || ''
-                    };
-                    this.saveCurrentUser();
-                    return true;
-                }
-            } catch (error) {
-                console.error('Supabase login error:', error);
-            }
+        if (!SupabaseService?.isReady?.()) {
+            console.warn('Supabase is not configured or unavailable.');
+            return false;
         }
 
-        const user = dataManager.loginUser(email, password);
-        if (user) {
-            this.currentUser = {
-                ...user,
-                displayName: user.displayName || user.username,
-                bio: user.bio || '',
-                avatarUrl: user.avatarUrl || '',
-                website: user.website || ''
-            };
-            this.saveCurrentUser();
-            return true;
+        try {
+            const user = await SupabaseService.fetchUserByEmail(email);
+            if (user && user.password_hash === passwordHash) {
+                this.currentUser = {
+                    email: user.email,
+                    username: user.username,
+                    likedPacks: user.liked_packs || [],
+                    uploadedPacks: user.uploaded_packs || [],
+                    displayName: user.display_name || user.username,
+                    bio: user.bio || '',
+                    avatarUrl: user.avatar_url || ''
+                };
+                this.saveCurrentUser();
+                return true;
+            }
+        } catch (error) {
+            console.error('Supabase login error:', error);
         }
+
         return false;
     }
 
     async register(email, username, password) {
         const passwordHash = await this.hashPassword(password);
 
-        if (SupabaseService?.isReady?.()) {
-            try {
-                const existing = await SupabaseService.fetchUserByEmail(email);
-                if (existing) {
-                    return false;
-                }
+        if (!SupabaseService?.isReady?.()) {
+            console.warn('Supabase is not configured or unavailable.');
+            return false;
+        }
 
-                const user = await SupabaseService.createUser({
-                    email,
-                    username,
-                    password_hash: passwordHash,
-                    liked_packs: [],
-                    uploaded_packs: [],
-                    display_name: username,
-                    bio: '',
-                    avatar_url: '',
-                    website: ''
-                });
-
-                if (user) {
-                    this.currentUser = {
-                        email: user.email,
-                        username: user.username,
-                        likedPacks: [],
-                        uploadedPacks: [],
-                        displayName: user.display_name || user.username,
-                        bio: user.bio || '',
-                        avatarUrl: user.avatar_url || '',
-                        website: user.website || ''
-                    };
-                    this.saveCurrentUser();
-                    return true;
-                }
-            } catch (error) {
-                console.error('Supabase register error:', error);
+        try {
+            const existing = await SupabaseService.fetchUserByEmail(email);
+            if (existing) {
                 return false;
             }
-        }
 
-        const user = dataManager.registerUser(email, username, password);
-        if (user) {
-            this.currentUser = {
+            const user = await SupabaseService.createUser({
                 email,
                 username,
-                likedPacks: [],
-                uploadedPacks: [],
-                displayName: username,
+                password_hash: passwordHash,
+                liked_packs: [],
+                uploaded_packs: [],
+                display_name: username,
                 bio: '',
-                avatarUrl: '',
-                website: ''
-            };
-            this.saveCurrentUser();
-            return true;
+                avatar_url: ''
+            });
+
+            if (user) {
+                this.currentUser = {
+                    email: user.email,
+                    username: user.username,
+                    likedPacks: [],
+                    uploadedPacks: [],
+                    displayName: user.display_name || user.username,
+                    bio: user.bio || '',
+                    avatarUrl: user.avatar_url || ''
+                };
+                this.saveCurrentUser();
+                return true;
+            }
+        } catch (error) {
+            console.error('Supabase register error:', error);
+            return false;
         }
+
         return false;
     }
 
@@ -140,30 +111,42 @@ class AuthManager {
 
     async toggleLike(packId) {
         if (!this.currentUser) return false;
-        const pack = dataManager.getPack(packId);
-        if (!pack) return false;
 
         const index = this.currentUser.likedPacks.indexOf(packId);
         if (index > -1) {
             this.currentUser.likedPacks.splice(index, 1);
-            pack.likes = Math.max(0, pack.likes - 1);
         } else {
             this.currentUser.likedPacks.push(packId);
-            pack.likes++;
         }
-
-        this.saveCurrentUser();
-        dataManager.savePacks();
 
         if (SupabaseService?.isReady?.()) {
             try {
                 await SupabaseService.updateUserLikes(this.currentUser.email, this.currentUser.likedPacks);
             } catch (error) {
                 console.error('Failed to update Supabase liked packs:', error);
+                return false;
             }
         }
 
         return true;
+    }
+
+    async addUploadedPack(packId) {
+        if (!this.currentUser) return false;
+
+        const uploadedPacks = [...(this.currentUser.uploadedPacks || []), packId];
+        if (SupabaseService?.isReady?.()) {
+            try {
+                await SupabaseService.updateUserUploads(this.currentUser.email, uploadedPacks);
+                this.currentUser.uploadedPacks = uploadedPacks;
+                return true;
+            } catch (error) {
+                console.error('Failed to update uploaded packs in Supabase:', error);
+                return false;
+            }
+        }
+
+        return false;
     }
 
     isPackLiked(packId) {
@@ -173,31 +156,31 @@ class AuthManager {
     async updateProfile(profileData) {
         if (!this.currentUser) return false;
 
+        if (!SupabaseService?.isReady?.()) {
+            console.warn('Supabase is not configured or unavailable.');
+            return false;
+        }
+
         const updates = {
             displayName: profileData.displayName || this.currentUser.displayName,
             bio: profileData.bio || this.currentUser.bio,
-            avatarUrl: profileData.avatarUrl || this.currentUser.avatarUrl,
-            website: profileData.website || this.currentUser.website
+            avatarUrl: profileData.avatarUrl || this.currentUser.avatarUrl
         };
 
-        this.currentUser = { ...this.currentUser, ...updates };
-        this.saveCurrentUser();
+        try {
+            await SupabaseService.updateProfile(this.currentUser.email, {
+                display_name: updates.displayName,
+                bio: updates.bio,
+                avatar_url: updates.avatarUrl
+            });
 
-        if (SupabaseService?.isReady?.()) {
-            try {
-                await SupabaseService.updateProfile(this.currentUser.email, {
-                    display_name: updates.displayName,
-                    bio: updates.bio,
-                    avatar_url: updates.avatarUrl,
-                    website: updates.website
-                });
-            } catch (error) {
-                console.error('Failed to update Supabase profile:', error);
-                return false;
-            }
+            this.currentUser = { ...this.currentUser, ...updates };
+            this.saveCurrentUser();
+            return true;
+        } catch (error) {
+            console.error('Failed to update Supabase profile:', error);
+            return false;
         }
-
-        return true;
     }
 }
 

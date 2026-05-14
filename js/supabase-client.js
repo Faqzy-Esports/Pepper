@@ -124,12 +124,51 @@ const SupabaseService = {
         return data;
     },
 
+    async updateUserLikes(email, likedPacks) {
+        if (!this.client) {
+            throw new Error('Supabase client is not initialized');
+        }
+
+        const { data, error } = await this.client.from('users').update({ liked_packs: likedPacks }).eq('email', email).select().single();
+        if (error) {
+            throw error;
+        }
+
+        return data;
+    },
+
+    async updateProfile(email, profileUpdates) {
+        if (!this.client) {
+            throw new Error('Supabase client is not initialized');
+        }
+
+        const { data, error } = await this.client.from('users').update(profileUpdates).eq('email', email).select().single();
+        if (error) {
+            throw error;
+        }
+
+        return data;
+    },
+
     async getUserCount() {
         if (!this.client) {
             throw new Error('Supabase client is not initialized');
         }
 
         const { count, error } = await this.client.from('users').select('*', { count: 'exact', head: true });
+        if (error) {
+            throw error;
+        }
+
+        return count || 0;
+    },
+
+    async getPackCount() {
+        if (!this.client) {
+            throw new Error('Supabase client is not initialized');
+        }
+
+        const { count, error } = await this.client.from('packs').select('*', { count: 'exact', head: true });
         if (error) {
             throw error;
         }
@@ -156,6 +195,19 @@ const SupabaseService = {
         }
 
         const { data, error } = await this.client.from('packs').update({ downloads }).eq('id', packId).select().single();
+        if (error) {
+            throw error;
+        }
+
+        return data;
+    },
+
+    async updatePackLikes(packId, likes) {
+        if (!this.client) {
+            throw new Error('Supabase client is not initialized');
+        }
+
+        const { data, error } = await this.client.from('packs').update({ likes }).eq('id', packId).select().single();
         if (error) {
             throw error;
         }

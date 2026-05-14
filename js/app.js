@@ -1,6 +1,7 @@
 // Main App Module
 class PepperApp {
     constructor() {
+        this.packList = [];
         this.init();
     }
 
@@ -32,16 +33,7 @@ class PepperApp {
                     ]);
                 } catch (error) {
                     console.error('Failed to fetch stats from Supabase:', error);
-                    // Fall back to localStorage
-                    userCount = Object.keys(dataManager.users || {}).length;
-                    likeCount = (dataManager.packs || []).reduce((sum, pack) => sum + (pack.likes || 0), 0);
-                    packCount = (dataManager.packs || []).length;
                 }
-            } else {
-                // Use localStorage
-                userCount = Object.keys(dataManager.users || {}).length;
-                likeCount = (dataManager.packs || []).reduce((sum, pack) => sum + (pack.likes || 0), 0);
-                packCount = (dataManager.packs || []).length;
             }
 
             const usersElement = document.getElementById('homeUsersCount');
@@ -130,6 +122,7 @@ class PepperApp {
                 uiManager.showNotification('Logged in successfully!', 'success');
                 uiManager.closeModal(document.getElementById('authModal'));
                 this.updateUI();
+                this.updateHomeStats();
             } else {
                 uiManager.showNotification('Invalid email or password', 'error');
             }
@@ -162,6 +155,7 @@ class PepperApp {
                 uiManager.showNotification('Account created successfully!', 'success');
                 uiManager.closeModal(document.getElementById('authModal'));
                 this.updateUI();
+                this.updateHomeStats();
             } else {
                 uiManager.showNotification('Email already registered', 'error');
             }
@@ -246,11 +240,13 @@ class PepperApp {
                     return;
                 }
             } else {
-                newPack = dataManager.addPack(packData);
+                uiManager.showNotification('Supabase is not configured. Uploads are disabled.', 'error');
+                return;
             }
 
             if (newPack && newPack.id) {
                 await authManager.addUploadedPack(newPack.id);
+                this.packList.unshift(newPack);
             }
 
             uiManager.showNotification('Pack uploaded successfully!', 'success');
@@ -296,11 +292,10 @@ class PepperApp {
         document.getElementById('profileForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const displayName = document.getElementById('profileDisplayName').value.trim();
-            const bio = document.getElementById('profileBio').value.trim();
             const avatarUrl = document.getElementById('profileAvatarUrl').value.trim();
-            const website = document.getElementById('profileWebsite').value.trim();
+            const bio = document.getElementById('profileBio').value.trim();
 
-            if (await authManager.updateProfile({ displayName, bio, avatarUrl, website })) {
+            if (await authManager.updateProfile({ displayName, bio, avatarUrl })) {
                 uiManager.showNotification('Profile updated successfully!', 'success');
                 this.updateUI();
             } else {
@@ -333,9 +328,12 @@ class PepperApp {
                     return;
                 }
 
+                const pack = this.getPackById(packId);
+                const wasLiked = authManager.isPackLiked(packId);
                 const success = await authManager.toggleLike(packId);
-                const pack = dataManager.getPack(packId);
+
                 if (success && pack) {
+                    pack.likes += wasLiked ? -1 : 1;
                     const packLikesEl = document.getElementById('packLikes');
                     const isLiked = authManager.isPackLiked(packId);
 
@@ -347,6 +345,12 @@ class PepperApp {
                     likeTarget.classList.toggle('liked', isLiked);
                     likeTarget.textContent = isLiked ? '❤️ Liked' : '🤍 Like';
                     uiManager.showNotification(isLiked ? 'Added to likes' : 'Removed from likes', 'success');
+
+                    if (SupabaseService?.isReady?.()) {
+                        SupabaseService.updatePackLikes(packId, pack.likes).catch(error => {
+                            console.error('Failed to update pack likes in Supabase:', error);
+                        });
+                    }
                 }
             }
         });
@@ -360,12 +364,10 @@ class PepperApp {
                 if (!packIdInput) return;
 
                 const packId = parseInt(packIdInput.value);
-                const pack = dataManager.getPack(packId);
+                const pack = this.getPackById(packId);
                 if (pack) {
                     pack.downloads++;
-                    dataManager.savePacks();
 
-                    // Update Supabase if available
                     if (SupabaseService?.isReady?.()) {
                         SupabaseService.updatePackDownloads(packId, pack.downloads).catch(error => {
                             console.error('Failed to update downloads in Supabase:', error);
@@ -424,7 +426,7 @@ class PepperApp {
     }
 
     viewPackDetail(packId) {
-        const pack = dataManager.getPack(packId);
+        const pack = this.getPackById(packId);
         if (!pack) {
             uiManager.showNotification('Pack not found', 'error');
             return;
@@ -612,8 +614,8 @@ class PepperApp {
             if (SupabaseService?.isReady?.()) {
                 try {
                     const remotePacks = await SupabaseService.fetchPacks();
-                    if (Array.isArray(remotePacks) && remotePacks.length > 0) {
-                        dataManager.setPacks(remotePacks);
+                    if (Array.isArray(remotePacks)) {
+                        this.packList = remotePacks;
                     }
                 } catch (error) {
                     console.warn('Supabase pack fetch failed:', error);
@@ -625,7 +627,7 @@ class PepperApp {
             const searchTerm = (searchInput?.value || headerSearchInput?.value || '').toLowerCase();
             const sort = sortFilter?.value || 'downloads';
 
-            let packs = [...dataManager.packs];
+            let packs = [...this.packList];
 
             // Filter
             if (searchTerm) {
@@ -696,6 +698,10 @@ class PepperApp {
         return html;
     }
 
+    getPackById(packId) {
+        return this.packList.find(pack => pack.id === packId);
+    }
+
     updateUI() {
         uiManager.updateAccountButton();
 
@@ -710,7 +716,6 @@ class PepperApp {
             document.getElementById('profileDisplayName').value = user.displayName || user.username;
             document.getElementById('profileBio').value = user.bio || '';
             document.getElementById('profileAvatarUrl').value = user.avatarUrl || '';
-            document.getElementById('profileWebsite').value = user.website || '';
 
             if (logoutBtn) logoutBtn.style.display = 'block';
         } else {
@@ -724,13 +729,21 @@ class PepperApp {
         authManager.logout();
         uiManager.showNotification('Logged out successfully', 'success');
         this.updateUI();
+        this.updateHomeStats();
         this.navigateTo('home');
     }
 }
 
+const LEGACY_STORAGE_KEYS = ['pepper_current_user', 'pepper_users', 'pepper_packs', 'pepper_user'];
+const clearLegacyLocalStorage = () => {
+    if (typeof localStorage === 'undefined') return;
+    LEGACY_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
+};
+
 // Initialize app when DOM is ready
 let app;
 const initializeApp = () => {
+    clearLegacyLocalStorage();
     if (!app) {
         app = new PepperApp();
     }
