@@ -259,6 +259,70 @@ class PepperApp {
             this.navigateTo('browse');
         });
 
+        // Upload version form
+        document.getElementById('uploadVersionBtn')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!authManager.isLoggedIn()) {
+                uiManager.showNotification('Please login to publish a new version', 'error');
+                return;
+            }
+            uiManager.openModal('updateModal');
+        });
+
+        document.getElementById('updatePackForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!authManager.isLoggedIn()) {
+                uiManager.showNotification('Please login first', 'error');
+                return;
+            }
+
+            const packId = parseInt(document.getElementById('detailPackId').value, 10);
+            const pack = this.getPackById(packId);
+            if (!pack) {
+                uiManager.showNotification('Pack not found', 'error');
+                return;
+            }
+
+            const currentUser = authManager.getCurrentUser();
+            if (!currentUser || currentUser.username !== pack.uploadedBy) {
+                uiManager.showNotification('Only the original author can publish updates', 'error');
+                return;
+            }
+
+            const newVersion = document.getElementById('newVersion').value.trim();
+            const changelog = document.getElementById('versionChangelog').value.trim();
+
+            if (!newVersion || !changelog) {
+                uiManager.showNotification('Please provide a version and changelog', 'error');
+                return;
+            }
+
+            const versionData = {
+                version: newVersion,
+                date: new Date().toLocaleDateString(),
+                changelog: changelog,
+                downloads: 0
+            };
+
+            pack.versions = pack.versions || [];
+            pack.versions.unshift(versionData);
+            pack.version = newVersion;
+
+            if (SupabaseService?.isReady?.()) {
+                try {
+                    await SupabaseService.updatePackVersion(packId, { versions: pack.versions, version: pack.version });
+                } catch (error) {
+                    console.warn('Unable to update version metadata in Supabase:', error);
+                }
+            }
+
+            this.viewPackDetail(packId);
+            uiManager.showNotification('New version published successfully!', 'success');
+            uiManager.closeModal(document.getElementById('updateModal'));
+            document.getElementById('updatePackForm').reset();
+        });
+
         // Auth Toggle
         document.getElementById('toggleRegister')?.addEventListener('click', (e) => {
             e.preventDefault();
@@ -464,9 +528,37 @@ class PepperApp {
         document.getElementById('packAuthor').textContent = `by ${pack.author}`;
         document.getElementById('packDescription').textContent = pack.description;
         document.getElementById('packVersion').textContent = pack.version;
-        document.getElementById('packRating').textContent = pack.rating.toFixed(1);
-        document.getElementById('packDownloads').textContent = uiManager.formatNumber(pack.downloads);
-        document.getElementById('packLikes').textContent = uiManager.formatNumber(pack.likes);
+        document.getElementById('packRating').textContent = pack.rating ? pack.rating.toFixed(1) : '—';
+        document.getElementById('packDownloads').textContent = uiManager.formatNumber(pack.downloads || 0);
+        document.getElementById('packLikes').textContent = uiManager.formatNumber(pack.likes || 0);
+
+        const fullDescription = document.getElementById('packFullDescription');
+        if (fullDescription) {
+            fullDescription.innerHTML = this.markdownToHtml(pack.fullDescription || pack.description || 'No description available.');
+        }
+
+        const packMeta = document.getElementById('packMeta');
+        if (packMeta) {
+            const tags = Array.isArray(pack.tags) ? pack.tags : (typeof pack.tags === 'string' ? pack.tags.split(',').map(t => t.trim()).filter(Boolean) : []);
+            const compatibility = Array.isArray(pack.compatibility) ? pack.compatibility : (typeof pack.compatibility === 'string' ? pack.compatibility.split(',').map(v => v.trim()).filter(Boolean) : []);
+
+            const metaItems = [
+                { label: 'Category', value: pack.category || 'Unknown' },
+                { label: 'Author', value: pack.author || 'Unknown' },
+            ];
+
+            if (compatibility.length) {
+                metaItems.push({ label: 'Compatibility', value: compatibility.join(', ') });
+            }
+
+            if (tags.length) {
+                metaItems.push({ label: 'Tags', value: tags.join(', ') });
+            }
+
+            packMeta.innerHTML = metaItems.map(item => `
+                <span class="meta-pill"><strong>${item.label}:</strong> ${item.value}</span>
+            `).join('');
+        }
 
         // Update cover
         const cover = document.getElementById('packCover');
@@ -542,18 +634,44 @@ class PepperApp {
             return;
         }
 
-        versions.innerHTML = pack.versions.map((v, index) => `
-            <div class="version-item" style="animation: fadeInUp 0.5s ease ${index * 0.1}s both;">
-                <div class="version-header">
-                    <span class="version-number">v${v.version}</span>
-                    <span class="version-date">${v.date}</span>
+        versions.innerHTML = pack.versions.map((v, index) => {
+            const changelogHtml = this.formatChangelog(v.changelog);
+            return `
+                <div class="version-item" style="animation: fadeInUp 0.5s ease ${index * 0.1}s both;">
+                    <div class="version-header">
+                        <span class="version-number">v${v.version}</span>
+                        <span class="version-date">${v.date}</span>
+                    </div>
+                    ${changelogHtml}
+                    <div class="version-actions">
+                        <button class="version-download" onclick="app.downloadVersion('${pack.name}', '${v.version}')">
+                            ⬇️ Download v${v.version}
+                        </button>
+                    </div>
                 </div>
-                <p class="version-changelog">${v.changelog}</p>
-                <button class="btn btn-small btn-primary" onclick="app.downloadVersion('${pack.name}', '${v.version}')">
-                    ⬇️ Download v${v.version}
-                </button>
+            `;
+        }).join('');
+    }
+
+    formatChangelog(changelog) {
+        if (!changelog) {
+            return '<p class="version-changelog">No changelog details available.</p>';
+        }
+
+        const lines = changelog
+            .split(/\r?\n/)
+            .map(line => line.trim())
+            .filter(Boolean);
+
+        if (lines.length === 1) {
+            return `<p class="version-changelog">${lines[0]}</p>`;
+        }
+
+        return `
+            <div class="version-changelog">
+                <ul>${lines.map(line => `<li>${line.replace(/^[-*]\s*/, '')}</li>`).join('')}</ul>
             </div>
-        `).join('');
+        `;
     }
 
     downloadVersion(packName, version) {

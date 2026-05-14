@@ -301,4 +301,17 @@ const SupabaseService = {
 
         return data;
     },
+
+    async updatePackVersion(packId, updateData) {
+        if (!this.client) {
+            throw new Error('Supabase client is not initialized');
+        }
+
+        const { data, error } = await this.client.from('packs').update(updateData).eq('id', packId).select().single();
+        if (error) {
+            throw error;
+        }
+
+        return data;
+    },
 };

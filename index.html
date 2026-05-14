@@ -205,6 +205,7 @@
                             </div>
 
                             <p class="pack-info-description" id="packDescription"></p>
+                            <div class="pack-info-meta" id="packMeta"></div>
 
                             <div class="pack-info-actions">
                                 <button class="btn btn-primary" id="downloadPack">⬇️ Download v<span id="packVersion">1.0.0</span></button>
@@ -373,6 +374,32 @@
                 <div class="form-actions" style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
                     <button type="button" class="btn btn-secondary" onclick="uiManager.closeModal(document.getElementById('uploadModal'))">Cancel</button>
                     <button type="submit" class="btn btn-primary">Upload Pack</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Update Pack Version Modal -->
+    <div id="updateModal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Publish a New Version</h2>
+                <button class="modal-close">×</button>
+            </div>
+
+            <form id="updatePackForm">
+                <div class="form-group">
+                    <label class="form-label">New Version</label>
+                    <input type="text" id="newVersion" class="form-input" placeholder="e.g. 1.1.0" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Changelog</label>
+                    <textarea id="versionChangelog" class="form-textarea" placeholder="Describe what changed in this update" required></textarea>
+                </div>
+                <div class="form-actions" style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
+                    <button type="button" class="btn btn-secondary" onclick="uiManager.closeModal(document.getElementById('updateModal'))">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Publish Version</button>
                 </div>
             </form>
         </div>
