@@ -1,5 +1,0 @@
-services:
-  - type: static
-    name: pepper
-    staticPublishPath: .
-    buildCommand: npm run build
