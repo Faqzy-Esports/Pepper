@@ -36,7 +36,11 @@ class AuthManager {
                         email: user.email,
                         username: user.username,
                         likedPacks: user.liked_packs || [],
-                        uploadedPacks: user.uploaded_packs || []
+                        uploadedPacks: user.uploaded_packs || [],
+                        displayName: user.display_name || user.username,
+                        bio: user.bio || '',
+                        avatarUrl: user.avatar_url || '',
+                        website: user.website || ''
                     };
                     this.saveCurrentUser();
                     return true;
@@ -48,7 +52,13 @@ class AuthManager {
 
         const user = dataManager.loginUser(email, password);
         if (user) {
-            this.currentUser = user;
+            this.currentUser = {
+                ...user,
+                displayName: user.displayName || user.username,
+                bio: user.bio || '',
+                avatarUrl: user.avatarUrl || '',
+                website: user.website || ''
+            };
             this.saveCurrentUser();
             return true;
         }
@@ -70,7 +80,11 @@ class AuthManager {
                     username,
                     password_hash: passwordHash,
                     liked_packs: [],
-                    uploaded_packs: []
+                    uploaded_packs: [],
+                    display_name: username,
+                    bio: '',
+                    avatar_url: '',
+                    website: ''
                 });
 
                 if (user) {
@@ -78,7 +92,11 @@ class AuthManager {
                         email: user.email,
                         username: user.username,
                         likedPacks: [],
-                        uploadedPacks: []
+                        uploadedPacks: [],
+                        displayName: user.display_name || user.username,
+                        bio: user.bio || '',
+                        avatarUrl: user.avatar_url || '',
+                        website: user.website || ''
                     };
                     this.saveCurrentUser();
                     return true;
@@ -91,7 +109,16 @@ class AuthManager {
 
         const user = dataManager.registerUser(email, username, password);
         if (user) {
-            this.currentUser = { email, username, likedPacks: [], uploadedPacks: [] };
+            this.currentUser = {
+                email,
+                username,
+                likedPacks: [],
+                uploadedPacks: [],
+                displayName: username,
+                bio: '',
+                avatarUrl: '',
+                website: ''
+            };
             this.saveCurrentUser();
             return true;
         }
@@ -143,20 +170,34 @@ class AuthManager {
         return this.currentUser?.likedPacks.includes(packId) || false;
     }
 
-    async addUploadedPack(packId) {
-        if (!this.currentUser) return;
-        if (!this.currentUser.uploadedPacks.includes(packId)) {
-            this.currentUser.uploadedPacks.push(packId);
-            this.saveCurrentUser();
-        }
+    async updateProfile(profileData) {
+        if (!this.currentUser) return false;
+
+        const updates = {
+            displayName: profileData.displayName || this.currentUser.displayName,
+            bio: profileData.bio || this.currentUser.bio,
+            avatarUrl: profileData.avatarUrl || this.currentUser.avatarUrl,
+            website: profileData.website || this.currentUser.website
+        };
+
+        this.currentUser = { ...this.currentUser, ...updates };
+        this.saveCurrentUser();
 
         if (SupabaseService?.isReady?.()) {
             try {
-                await SupabaseService.updateUserUploads(this.currentUser.email, this.currentUser.uploadedPacks);
+                await SupabaseService.updateProfile(this.currentUser.email, {
+                    display_name: updates.displayName,
+                    bio: updates.bio,
+                    avatar_url: updates.avatarUrl,
+                    website: updates.website
+                });
             } catch (error) {
-                console.error('Failed to update Supabase uploaded packs:', error);
+                console.error('Failed to update Supabase profile:', error);
+                return false;
             }
         }
+
+        return true;
     }
 }
 

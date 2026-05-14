@@ -267,9 +267,20 @@ class PepperApp {
             }
         });
 
-        // Logout button
-        document.getElementById('logoutBtn')?.addEventListener('click', () => {
-            this.logout();
+        // Profile Form
+        document.getElementById('profileForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const displayName = document.getElementById('profileDisplayName').value.trim();
+            const bio = document.getElementById('profileBio').value.trim();
+            const avatarUrl = document.getElementById('profileAvatarUrl').value.trim();
+            const website = document.getElementById('profileWebsite').value.trim();
+
+            if (await authManager.updateProfile({ displayName, bio, avatarUrl, website })) {
+                uiManager.showNotification('Profile updated successfully!', 'success');
+                this.updateUI();
+            } else {
+                uiManager.showNotification('Failed to update profile', 'error');
+            }
         });
     }
 
@@ -670,10 +681,15 @@ class PepperApp {
         const logoutBtn = document.getElementById('logoutBtn');
         if (authManager.isLoggedIn()) {
             const user = authManager.getCurrentUser();
-            document.getElementById('profileUsername').textContent = user.username;
-            document.getElementById('profileEmail').textContent = user.email;
             document.getElementById('authForms').classList.add('hidden');
             document.getElementById('profileSection').classList.remove('hidden');
+
+            // Populate profile form
+            document.getElementById('profileDisplayName').value = user.displayName || user.username;
+            document.getElementById('profileBio').value = user.bio || '';
+            document.getElementById('profileAvatarUrl').value = user.avatarUrl || '';
+            document.getElementById('profileWebsite').value = user.website || '';
+
             if (logoutBtn) logoutBtn.style.display = 'block';
         } else {
             document.getElementById('authForms').classList.remove('hidden');

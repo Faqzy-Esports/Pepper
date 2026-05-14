@@ -88,6 +88,10 @@ class DataManager {
             password,
             likedPacks: [],
             uploadedPacks: [],
+            displayName: username,
+            bio: '',
+            avatarUrl: '',
+            website: '',
             createdAt: new Date().toISOString()
         };
         this.saveUsers();

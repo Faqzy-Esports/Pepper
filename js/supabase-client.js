@@ -116,18 +116,18 @@ const SupabaseService = {
         return data;
     },
 
-    async updateUserLikes(email, likedPacks) {
+    async updateProfile(email, profileData) {
         if (!this.client) {
             throw new Error('Supabase client is not initialized');
         }
 
-        const { data, error } = await this.client.from('users').update({ liked_packs: likedPacks }).eq('email', email).select().single();
+        const { data, error } = await this.client.from('users').update(profileData).eq('email', email).select().single();
         if (error) {
             throw error;
         }
 
         return data;
-    }
+    },
 };
 
 SupabaseService.init();
