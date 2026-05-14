@@ -2,14 +2,60 @@
 class AuthManager {
     constructor() {
         this.currentUser = null;
+        this.loadCurrentUser();
     }
 
     loadCurrentUser() {
+        if (typeof localStorage === 'undefined') {
+            return null;
+        }
+
+        const raw = localStorage.getItem('pepper_current_user');
+        if (!raw) {
+            return null;
+        }
+
+        try {
+            const user = JSON.parse(raw);
+            if (user && user.email) {
+                this.currentUser = user;
+                if (user.avatarUrl && !user.avatarUrl.startsWith('http') && SupabaseService?.isReady?.()) {
+                    this.resolveAvatarUrl(user.avatarUrl);
+                }
+                return this.currentUser;
+            }
+        } catch (error) {
+            console.warn('Failed to parse persisted user data:', error);
+        }
+
         return null;
     }
 
+    async resolveAvatarUrl(avatarUrl) {
+        try {
+            const publicUrl = await SupabaseService.getPublicUrl(avatarUrl);
+            if (publicUrl && this.currentUser) {
+                this.currentUser.avatarUrl = publicUrl;
+                this.saveCurrentUser();
+                if (typeof app !== 'undefined' && app && typeof app.updateUI === 'function') {
+                    app.updateUI();
+                }
+            }
+        } catch (error) {
+            console.warn('Unable to resolve stored avatar URL:', error);
+        }
+    }
+
     saveCurrentUser() {
-        return;
+        if (typeof localStorage === 'undefined') {
+            return;
+        }
+
+        if (this.currentUser) {
+            localStorage.setItem('pepper_current_user', JSON.stringify(this.currentUser));
+        } else {
+            localStorage.removeItem('pepper_current_user');
+        }
     }
 
     async hashPassword(password) {
