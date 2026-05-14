@@ -1,0 +1,391 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pepper — Resource Pack Repository</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section" id="appLogo">
+                <span>🌶️</span>
+                <span class="logo-text">Pepper</span>
+            </div>
+
+            <nav class="nav">
+                <button class="nav-link active" data-page="home">Home</button>
+                <button class="nav-link" data-page="browse">Data Packs</button>
+            </nav>
+
+            <div class="header-actions">
+                <button class="btn btn-secondary btn-pill" onclick="app.navigateTo('browse')">Discover content</button>
+                <button class="btn btn-secondary btn-pill" onclick="app.openUploadModal()">Upload</button>
+                <button class="btn btn-primary" id="accountButton">Sign in</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Home Page -->
+        <div id="homePage" class="page">
+            <section class="hero">
+                <div class="container hero-grid">
+                    <div class="hero-copy">
+                        <span class="brand-badge">Data Packs</span>
+                        <h1>The place for Minecraft data packs</h1>
+                        <p>Discover, play, and share Minecraft content through a modern platform built for creators and players.</p>
+                        <div class="hero-buttons">
+                            <button class="btn btn-primary" onclick="app.navigateTo('browse')">Discover packs</button>
+                            <button class="btn btn-secondary" onclick="app.openUploadModal()">Upload your pack</button>
+                        </div>
+
+                        <div class="home-categories">
+                            <button class="category-pill">Adventure</button>
+                            <button class="category-pill">Game Mechanics</button>
+                            <button class="category-pill">Utility</button>
+                            <button class="category-pill">World Generation</button>
+                        </div>
+                    </div>
+
+                    <aside class="hero-panel">
+                        <div class="hero-card">
+                            <h3>Featured right now</h3>
+                            <div class="hero-card-title">VeinMiner</div>
+                            <p>Mine the whole vein on a single ore with powerful, community-made datapacks.</p>
+                            <div class="hero-card-line">
+                                <span>47.4M downloads</span>
+                                <span>4,701 likes</span>
+                            </div>
+                        </div>
+                        <div class="hero-card">
+                            <h3>Top categories</h3>
+                            <div class="category-list">
+                                <button class="category-pill active">Adventure</button>
+                                <button class="category-pill">Magic</button>
+                                <button class="category-pill">Equipment</button>
+                                <button class="category-pill">Optimization</button>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="container">
+                    <div class="section-header">
+                        <div>
+                            <h2 class="section-title">Fast stats</h2>
+                            <p style="color: var(--text-secondary); margin-top: 0.5rem;">Real-time usage and community engagement at a glance.</p>
+                        </div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number">47.5M</div>
+                            <div class="stat-label">Downloads</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">622</div>
+                            <div class="stat-label">Active categories</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">12.8k</div>
+                            <div class="stat-label">Creators</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="container">
+                    <div class="section-header">
+                        <div>
+                            <h2 class="section-title">Why Pepper</h2>
+                            <p style="color: var(--text-secondary); margin-top: 0.5rem;">Designed for clean discovery, fast browsing, and community content sharing.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-3">
+                        <div class="stat-card">
+                            <div class="stat-number">Clean</div>
+                            <div class="stat-label">Minimal interface with sharp focus on content.</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">Fast</div>
+                            <div class="stat-label">Simple navigation and intuitive browsing for Minecraft creators.</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">Reliable</div>
+                            <div class="stat-label">Structured pages and no clutter, so every pack request stays focused.</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Browse Page -->
+        <div id="browsePage" class="page hidden">
+            <section class="section">
+                <div class="container">
+                    <div class="section-header">
+                        <div>
+                            <h2 class="section-title">Browse data packs</h2>
+                            <p style="color: var(--text-secondary); margin-top: 0.5rem;">Filter, sort, and preview the best community content.</p>
+                        </div>
+                    </div>
+
+                    <div class="browse-topbar">
+                        <div class="search-box">
+                            <input type="text" class="form-input" id="searchInput" placeholder="Search datapacks...">
+                        </div>
+                        <div class="sort-card">
+                            <label for="sortFilter" style="color: var(--text-secondary); font-weight: 600;">Sort by</label>
+                            <select class="form-select" id="sortFilter">
+                                <option value="downloads">Relevance</option>
+                                <option value="likes">Most Liked</option>
+                                <option value="rating">Highest Rated</option>
+                                <option value="recent">Recently Updated</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="browse-layout">
+                        <aside class="sidebar">
+                            <div class="sidebar-card">
+                                <h3>Category</h3>
+                                <div class="category-list">
+                                    <button class="category-pill active">All Categories</button>
+                                    <button class="category-pill">Adventure</button>
+                                    <button class="category-pill">Magic</button>
+                                    <button class="category-pill">Equipment</button>
+                                    <button class="category-pill">Optimization</button>
+                                    <button class="category-pill">World Generation</button>
+                                    <button class="category-pill">Utility</button>
+                                </div>
+                            </div>
+                            <div class="sidebar-card">
+                                <h3>Filters</h3>
+                                <div class="form-group">
+                                    <label for="categoryFilter">Category</label>
+                                    <select class="form-select" id="categoryFilter">
+                                        <option value="">All Categories</option>
+                                        <option value="Texture">Texture</option>
+                                        <option value="Shader">Shader</option>
+                                        <option value="UI">UI</option>
+                                        <option value="Music">Music</option>
+                                        <option value="Utility">Utility</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </aside>
+
+                        <div>
+                            <div class="pack-list-value">
+                                <div style="color: var(--text-secondary);">Showing the latest community packs</div>
+                                <div class="view-badges">
+                                    <span class="view-badge active">Grid</span>
+                                    <span class="view-badge">List</span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-3" id="browsePackGrid"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Pack Detail Page -->
+        <div id="detailPage" class="page hidden">
+            <div class="container">
+                <div class="pack-detail">
+                    <button class="btn btn-secondary" id="backToDetail" style="margin-bottom: 2rem;">← Back to Browse</button>
+                    <input type="hidden" id="detailPackId">
+
+                    <div class="pack-detail-header">
+                        <div class="pack-cover" id="packCover"></div>
+                        <div class="pack-info">
+                            <h1 id="packName"></h1>
+                            <p class="pack-info-author" id="packAuthor"></p>
+
+                            <div class="pack-info-stats">
+                                <div class="pack-info-stat">
+                                    <div class="pack-info-stat-value" id="packDownloads">0</div>
+                                    <div class="pack-info-stat-label">Downloads</div>
+                                </div>
+                                <div class="pack-info-stat">
+                                    <div class="pack-info-stat-value" id="packLikes">0</div>
+                                    <div class="pack-info-stat-label">Likes</div>
+                                </div>
+                                <div class="pack-info-stat">
+                                    <div class="pack-info-stat-value" id="packRating">0</div>
+                                    <div class="pack-info-stat-label">Rating</div>
+                                </div>
+                            </div>
+
+                            <p class="pack-info-description" id="packDescription"></p>
+
+                            <div class="pack-info-actions">
+                                <button class="btn btn-primary" id="downloadPack">⬇️ Download v<span id="packVersion">1.0.0</span></button>
+                                <button class="btn btn-secondary liked" id="likePack">🤍 Like</button>
+                                <button class="btn btn-secondary" id="uploadVersionBtn" style="display: none;">📤 Upload Version</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tabs">
+                        <button class="tab-button active" data-tab="description">Description</button>
+                        <button class="tab-button" data-tab="gallery">Gallery</button>
+                        <button class="tab-button" data-tab="versions">Versions</button>
+                    </div>
+
+                    <div id="description" data-pane="description" class="tab-pane">
+                        <div id="packFullDescription" style="line-height: 1.8; color: var(--text-secondary);"></div>
+                    </div>
+
+                    <div id="gallery" data-pane="gallery" class="tab-pane hidden">
+                        <div class="gallery-grid" id="galleryGrid"></div>
+                    </div>
+
+                    <div id="versions" data-pane="versions" class="tab-pane hidden">
+                        <div class="versions-list" id="versionsList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                    <h2 class="modal-title">Pepper Account</h2>
+            </div>
+
+            <div id="authForms">
+                <form id="loginForm" class="form-group">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="loginEmail" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="loginPassword" class="form-input" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+                </form>
+
+                <p style="text-align: center; color: var(--text-secondary); margin-top: 1rem;" id="registerToggleP">
+                    Don't have an account? <a href="#" id="toggleRegister" style="color: var(--primary); cursor: pointer; text-decoration: none;">Register here</a>
+                </p>
+
+                <form id="registerForm" class="form-group hidden">
+                    <div class="form-group">
+                        <label class="form-label">Username</label>
+                        <input type="text" id="registerUsername" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="registerEmail" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="registerPassword" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" id="confirmPassword" class="form-input" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Create Account</button>
+                </form>
+
+                <p style="text-align: center; color: var(--text-secondary); margin-top: 1rem;" id="loginToggleP" class="hidden">
+                    Already have an account? <a href="#" id="toggleLogin" style="color: var(--primary); cursor: pointer; text-decoration: none;">Login here</a>
+                </p>
+            </div>
+
+            <div id="profileSection" class="hidden">
+                <div style="margin-bottom: 2rem;">
+                    <p style="margin-bottom: 1rem;"><strong>Username:</strong> <span id="profileUsername"></span></p>
+                    <p style="margin-bottom: 1rem;"><strong>Email:</strong> <span id="profileEmail"></span></p>
+                </div>
+                <div class="form-actions" style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    <button class="btn btn-secondary" style="flex: 1; min-width: 120px;">My Uploads</button>
+                    <button class="btn btn-secondary" style="flex: 1; min-width: 120px;">My Likes</button>
+                    <button class="btn btn-secondary" id="logoutBtn" style="flex: 1; min-width: 120px;" onclick="app.logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Pack Modal -->
+    <div id="uploadModal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Upload Resource Pack</h2>
+                <button class="modal-close">×</button>
+            </div>
+
+            <form id="uploadPackForm">
+                <div class="form-group">
+                    <label class="form-label">Pack Name</label>
+                    <input type="text" id="uploadName" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select id="uploadCategory" class="form-select" required>
+                        <option value="">Select Category</option>
+                        <option value="Texture">Texture</option>
+                        <option value="Shader">Shader</option>
+                        <option value="UI">UI</option>
+                        <option value="Music">Music</option>
+                        <option value="Utility">Utility</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Short Description</label>
+                    <input type="text" id="uploadDescription" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Full Description</label>
+                    <textarea id="uploadFullDescription" class="form-textarea" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Version (e.g., 1.0.0)</label>
+                    <input type="text" id="uploadVersion" class="form-input" value="1.0.0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tags (comma-separated)</label>
+                    <input type="text" id="uploadTags" class="form-input" placeholder="hd, 64x, bright...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Pack File (ZIP only)</label>
+                    <input type="file" id="uploadFile" class="form-input" accept=".zip" required>
+                    <p style="margin-top: 0.5rem; color: var(--text-secondary); font-size: 0.95rem;">Your pack must be uploaded as a .zip file before it can be saved.</p>
+                </div>
+                <div class="form-actions" style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
+                    <button type="button" class="btn btn-secondary" onclick="uiManager.closeModal(document.getElementById('uploadModal'))">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Upload Pack</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notifications -->
+    <div id="notificationContainer"></div>
+
+    <!-- Scripts -->
+    <script src="js/data.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
