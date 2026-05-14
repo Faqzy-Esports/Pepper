@@ -74,7 +74,7 @@ const SupabaseService = {
             throw error;
         }
 
-        const publicUrl = await this.getPublicUrl(data.path);
+        const publicUrl = await this.createSignedUrl(data.path);
         return {
             path: data.path,
             publicUrl
@@ -99,7 +99,7 @@ const SupabaseService = {
             throw error;
         }
 
-        const publicUrl = await this.getPublicUrl(data.path);
+        const publicUrl = await this.createSignedUrl(data.path);
         return {
             path: data.path,
             publicUrl
