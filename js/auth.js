@@ -99,19 +99,28 @@ class AuthManager {
                 password
             });
 
-            if (loginError || !loginData?.session) {
-                console.error('Supabase auth login error:', loginError);
-                return false;
+            if (!loginError && loginData?.session) {
+                const user = await SupabaseService.fetchUserByEmail(email);
+                if (user) {
+                    this.currentUser = await this.normalizeUserRecord(user);
+                    this.saveCurrentUser();
+                    return true;
+                }
             }
+        } catch (error) {
+            console.error('Supabase auth login error:', error);
+        }
 
+        // Fallback for existing users stored in the legacy users table
+        try {
             const user = await SupabaseService.fetchUserByEmail(email);
-            if (user) {
+            if (user && user.password_hash === await this.hashPassword(password)) {
                 this.currentUser = await this.normalizeUserRecord(user);
                 this.saveCurrentUser();
                 return true;
             }
         } catch (error) {
-            console.error('Supabase login error:', error);
+            console.error('Supabase fallback login error:', error);
         }
 
         return false;
